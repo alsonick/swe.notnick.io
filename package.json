@@ -1,0 +1,33 @@
+{
+  "name": "swe.notnick.io",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "next": "^15.5",
+    "react": "^18.3",
+    "react-dom": "^18.3",
+    "react-icons": "^4",
+    "tailwind-merge": "^3.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.11",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.7.0",
+    "eslint": "^8",
+    "eslint-config-next": "^15.5",
+    "postcss": "^8.5.33",
+    "tailwindcss": "^3.4",
+    "typescript": "^5.9"
+  }
+}

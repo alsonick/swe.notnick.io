@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand green, shared with notnick.io. The signature #30D158 is only 2:1
+       against white, so light mode uses a deeper green that clears the 4.5:1
+       WCAG AA minimum for text (and white text on top of it). */
+    --color-primary: 21 128 61;
+  }
+
+  .dark {
+    /* #30D158 is 10:1 against black. Text on a primary fill is black in dark
+       mode, since white on #30D158 is only 2:1. */
+    --color-primary: 48 209 88;
+  }
+}
+
+/* Bare `duration-*` utilities fall back to CSS's `ease`, which starts slowly
+   and reads as lag on hover. Default everything to ease-out instead; anything
+   with its own `ease-*` utility overrides this. */
+* {
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Added to <html> for the length of a theme toggle (see ThemeToggle.tsx), so
+   every colour fades together instead of the text snapping. */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 150ms ease-in-out, color 150ms ease-in-out,
+    border-color 150ms ease-in-out, fill 150ms ease-in-out,
+    stroke 150ms ease-in-out !important;
+}
+
+.liquid-glass {
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.01), 0 2px 6px -2px rgba(0, 0, 0, 0.02),
+    0 6px 14px -8px rgba(0, 0, 0, 0.04);
+}
+
+.dark .liquid-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.18),
+    0 10px 22px -8px rgba(0, 0, 0, 0.28);
+}
+
+::selection {
+  background: #5050ff;
+  color: #fff;
+}
+
+/* The flashcard flips in 3D. Both faces share one grid cell, so the card is
+   always as tall as its longer side and nothing jumps when it turns over. */
+.flip-scene {
+  perspective: 1600px;
+}
+
+.flip-card {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.flip-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-face-back {
+  transform: rotateY(180deg);
+}
+
+/* Without motion the card swaps sides with a quick cross-fade instead. */
+@media (prefers-reduced-motion: reduce) {
+  .flip-card,
+  .flip-card.is-flipped {
+    transform: none;
+    transition: none;
+  }
+
+  .flip-face {
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    transition: opacity 150ms ease-out;
+  }
+
+  .flip-face-back {
+    transform: none;
+    opacity: 0;
+  }
+
+  .flip-card.is-flipped .flip-face-front {
+    opacity: 0;
+  }
+
+  .flip-card.is-flipped .flip-face-back {
+    opacity: 1;
+  }
+}
+
+/* Code blocks on a card scroll on their own rather than widening it. */
+.card-content pre {
+  overflow-x: auto;
+}
+
+/* December snow (lib/decorations.ts), ported from notnick.io. Each flake sets
+   its own column and drift as custom properties, and the whole overlay fades
+   when the reader toggles it. */
+#decorations {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 9999999;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 700ms ease;
+}
+
+#decorations[data-hidden] {
+  opacity: 0;
+}
+
+#decorations > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  line-height: 1;
+  will-change: transform;
+  animation: decoration-fall linear infinite;
+}
+
+#decorations > .snowflake {
+  border-radius: 9999px;
+}
+
+@keyframes decoration-fall {
+  from {
+    transform: translate(var(--x), -2em) rotate(0deg);
+  }
+  to {
+    transform: translate(calc(var(--x) + var(--drift)), calc(100vh + 2em))
+      rotate(var(--spin));
+  }
+}
+
+/* No falling overlay for readers who ask for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  #decorations {
+    display: none;
+  }
+}
