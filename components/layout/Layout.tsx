@@ -7,6 +7,8 @@ import {
 import { Nav } from "./Nav";
 
 // Next.js
+import { useRouter } from "next/router";
+import Script from "next/script";
 import Head from "next/head";
 
 // Every page, including each lecture's ?lecture= page, shares one title and
@@ -19,6 +21,12 @@ interface Props {
 }
 
 export const Layout = (props: Props) => {
+  const { query } = useRouter();
+  // Snow through December, same as notnick.io. `?decoration=christmas`
+  // previews it out of season.
+  const showSnow =
+    new Date().getMonth() + 1 === 12 || query.decoration === "christmas";
+
   return (
     <>
       <Head>
@@ -67,6 +75,7 @@ export const Layout = (props: Props) => {
           </footer>
         </div>
       </div>
+      {showSnow ? <Script src="https://app.embed.im/snow.js" defer /> : null}
     </>
   );
 };

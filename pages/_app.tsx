@@ -1,4 +1,3 @@
-import { Decorations } from "../components/layout/Decorations";
 import { MAIN_CONTENT_ID } from "../lib/constants";
 import { IconContext } from "react-icons";
 import "../styles/globals.css";
@@ -24,7 +23,6 @@ export default function App({ Component, pageProps }: AppProps) {
           Skip to content
         </a>
         <Component {...pageProps} />
-        <Decorations />
       </div>
     </IconContext.Provider>
   );
