@@ -103,8 +103,7 @@ const Flashcards: NextPage = () => {
           <span id={`${DECK_LIST_ID}-heading`}>Lectures</span>
         </Heading>
         <Text className="mb-6">
-          Pick a lecture to study just its cards. The Kubernetes lecture isn&apos;t
-          included.
+          Pick a lecture to study just its cards.
         </Text>
         <LectureList
           selected={lecture?.slug ?? null}
