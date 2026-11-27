@@ -4,6 +4,8 @@ import {
   FiArrowRight,
   FiCheck,
   FiEye,
+  FiHelpCircle,
+  FiList,
   FiRefreshCw,
   FiRotateCcw,
   FiShuffle,
@@ -18,9 +20,11 @@ import {
   FOCUS_RING,
 } from "../../lib/styles";
 import { StudyPrefs, shuffled } from "../../lib/progress";
+import { choicesFor } from "../../lib/flashcards/quiz";
 import { StudyCard } from "../../types/flashcard";
 import { Kbd, Text } from "../ui/Typography";
 import { Flashcard } from "./Flashcard";
+import { GAVE_UP, QuizCard } from "./QuizCard";
 
 interface Props {
   cards: StudyCard[];
@@ -84,12 +88,15 @@ export const Study = (props: Props) => {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [marks, setMarks] = useState<Record<string, boolean>>({});
+  // The option picked for each card this round, in multiple choice.
+  const [picks, setPicks] = useState<Record<string, number>>({});
 
   const startRound = useCallback(() => {
     setQueue(buildRound());
     setIndex(0);
     setFlipped(false);
     setMarks({});
+    setPicks({});
   }, [buildRound]);
 
   // A new round once storage is read, and whenever shuffle or skip changes.
@@ -100,6 +107,10 @@ export const Study = (props: Props) => {
   const card = index < queue.length ? byId.get(queue[index]) : undefined;
   const finished = queue.length > 0 && index >= queue.length;
   const knownInDeck = cards.filter((c) => known.has(c.id)).length;
+  const quiz = prefs.multipleChoice;
+  const choices = useMemo(() => (card ? choicesFor(card) : null), [card]);
+  const picked = card && card.id in picks ? picks[card.id] : null;
+  const answered = quiz ? picked !== null : flipped;
 
   const flip = useCallback(() => setFlipped((f) => !f), []);
 
@@ -122,9 +133,41 @@ export const Study = (props: Props) => {
     [card, go, props.setKnown]
   );
 
+  // Multiple choice marks the card as soon as it's answered, and waits for
+  // "Next" so the reader can see which answer was right.
+  const pick = useCallback(
+    (option: number, isCorrect: boolean) => {
+      if (!card || card.id in picks) return;
+      props.setKnown(card.id, isCorrect);
+      setMarks((m) => ({ ...m, [card.id]: isCorrect }));
+      setPicks((p) => ({ ...p, [card.id]: option }));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [card, picks, props.setKnown]
+  );
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || ownsKeys(e.target) || !card) {
+        return;
+      }
+      if (quiz) {
+        const option = Number(e.key) - 1;
+        if (
+          !answered &&
+          choices &&
+          option >= 0 &&
+          option < choices.options.length
+        ) {
+          pick(option, option === choices.correct);
+        } else if (answered && (e.key === " " || e.key === "Enter")) {
+          e.preventDefault();
+          go(1);
+        } else if (e.key === "ArrowRight") {
+          go(1);
+        } else if (e.key === "ArrowLeft") {
+          go(-1);
+        }
         return;
       }
       switch (e.key) {
@@ -149,7 +192,7 @@ export const Study = (props: Props) => {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [card, flip, go, mark]);
+  }, [card, flip, go, mark, quiz, answered, choices, pick]);
 
   const resetDeck = () => {
     if (
@@ -173,13 +216,24 @@ export const Study = (props: Props) => {
       {card ? (
         // Keyed by card, so moving on never animates the old answer away and
         // reveals the next card's answer on the way.
-        <Flashcard
-          key={card.id}
-          card={card}
-          flipped={flipped}
-          known={known.has(card.id)}
-          onFlip={flip}
-        />
+        quiz && choices ? (
+          <QuizCard
+            key={card.id}
+            card={card}
+            choices={choices}
+            known={known.has(card.id)}
+            picked={picked}
+            onPick={pick}
+          />
+        ) : (
+          <Flashcard
+            key={card.id}
+            card={card}
+            flipped={flipped}
+            known={known.has(card.id)}
+            onFlip={flip}
+          />
+        )
       ) : (
         <div
           className={`flex min-h-[20rem] flex-col items-center justify-center gap-4 rounded-lg border ${BORDER}
@@ -199,7 +253,11 @@ export const Study = (props: Props) => {
                   : ""}
                 .
               </Text>
-              <button type="button" onClick={startRound} className={PRIMARY_BUTTON}>
+              <button
+                type="button"
+                onClick={startRound}
+                className={PRIMARY_BUTTON}
+              >
                 {prefs.skipKnown && knownInDeck < cards.length
                   ? "Study the rest"
                   : "Go again"}
@@ -222,7 +280,11 @@ export const Study = (props: Props) => {
                 >
                   Review them anyway <FiEye className="ml-2" />
                 </button>
-                <button type="button" onClick={resetDeck} className={SECONDARY_BUTTON}>
+                <button
+                  type="button"
+                  onClick={resetDeck}
+                  className={SECONDARY_BUTTON}
+                >
                   Reset progress <FiRotateCcw className="ml-2" />
                 </button>
               </div>
@@ -245,6 +307,26 @@ export const Study = (props: Props) => {
         </button>
         {!card ? (
           <div className="flex-1" />
+        ) : quiz ? (
+          answered ? (
+            <button
+              type="button"
+              onClick={() => go(1)}
+              title="Next card (Enter)"
+              className={`${PRIMARY_BUTTON} flex-1`}
+            >
+              Next card
+              <FiArrowRight className="ml-2 text-lg" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => pick(GAVE_UP, false)}
+              className={`${SECONDARY_BUTTON} flex-1`}
+            >
+              <FiHelpCircle className="mr-2 text-lg" />I don&apos;t know
+            </button>
+          )
         ) : flipped ? (
           <>
             <button
@@ -281,11 +363,11 @@ export const Study = (props: Props) => {
           type="button"
           onClick={() => go(1)}
           disabled={!card}
-          aria-label={flipped ? "Skip card" : "Next card"}
+          aria-label={!quiz && flipped ? "Skip card" : "Next card"}
           title="Next card (→)"
           className={SQUARE_BUTTON}
         >
-          {flipped ? (
+          {!quiz && flipped ? (
             <FiSkipForward className="text-lg" />
           ) : (
             <FiArrowRight className="text-lg" />
@@ -298,10 +380,10 @@ export const Study = (props: Props) => {
         <div className="flex items-center justify-between text-sm font-semibold text-gray-600 dark:text-gray-300">
           <span role="status" aria-live="polite">
             {card
-              ? `Card ${index + 1} of ${queue.length}${flipped ? ", answer shown" : ""}`
+              ? `Card ${index + 1} of ${queue.length}${answered ? ", answer shown" : ""}`
               : finished
-              ? "Round complete"
-              : "Nothing left to study"}
+                ? "Round complete"
+                : "Nothing left to study"}
           </span>
           <span>
             {knownInDeck} of {cards.length} known
@@ -324,6 +406,13 @@ export const Study = (props: Props) => {
 
       {/* Options */}
       <div className="mt-5 flex flex-wrap items-center gap-2">
+        <Toggle
+          pressed={quiz}
+          onClick={() => props.updatePrefs({ multipleChoice: !quiz })}
+          icon={<FiList />}
+        >
+          Multiple choice
+        </Toggle>
         <Toggle
           pressed={prefs.shuffle}
           onClick={() => props.updatePrefs({ shuffle: !prefs.shuffle })}
@@ -358,21 +447,36 @@ export const Study = (props: Props) => {
         </button>
       </div>
 
-      <p className="mt-5 hidden sm:flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-1.5">
-          <Kbd>Space</Kbd> flip
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Kbd>←</Kbd>
-          <Kbd>→</Kbd> move
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Kbd>1</Kbd> still learning
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Kbd>2</Kbd> got it
-        </span>
-      </p>
+      {quiz ? (
+        <p className="mt-5 hidden sm:flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className="flex items-center gap-1.5">
+            <Kbd>1</Kbd>–<Kbd>{choices?.options.length ?? 4}</Kbd> answer
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>Enter</Kbd> next card
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>←</Kbd>
+            <Kbd>→</Kbd> move
+          </span>
+        </p>
+      ) : (
+        <p className="mt-5 hidden sm:flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className="flex items-center gap-1.5">
+            <Kbd>Space</Kbd> flip
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>←</Kbd>
+            <Kbd>→</Kbd> move
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>1</Kbd> still learning
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>2</Kbd> got it
+          </span>
+        </p>
+      )}
     </div>
   );
 };

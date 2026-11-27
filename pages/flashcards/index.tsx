@@ -55,8 +55,9 @@ const Flashcards: NextPage = () => {
         <Heading as="h1">Flashcards</Heading>
         <Text>
           {ALL_CARDS.length} cards from the first {LECTURES.length} lectures of{" "}
-          {MODULE}. Flip a card, then mark whether you got it. Your progress
-          is saved in this browser.
+          {MODULE}. Pick the right answer from the options, or switch off
+          multiple choice to flip the cards instead. Your progress is saved in
+          this browser.
         </Text>
       </header>
 

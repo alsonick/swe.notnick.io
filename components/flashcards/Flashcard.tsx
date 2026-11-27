@@ -13,7 +13,7 @@ interface Props {
 const FACE = `flip-face flex min-h-[20rem] flex-col rounded-lg border bg-white dark:bg-[#10161a]
   p-6 sm:p-8 duration-300`;
 
-const Header = (props: { side: string; card: StudyCard; known: boolean }) => (
+export const Header = (props: { side: string; card: StudyCard; known: boolean }) => (
   <div className="flex items-center justify-between gap-4">
     <Label>{props.side}</Label>
     <div className="flex items-center gap-3 text-sm font-semibold text-gray-500 dark:text-gray-400">

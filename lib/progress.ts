@@ -62,9 +62,15 @@ export interface StudyPrefs {
   shuffle: boolean;
   /** Leave cards marked "Got it" out of each new round. */
   skipKnown: boolean;
+  /** Answer by picking from options instead of flipping the card. */
+  multipleChoice: boolean;
 }
 
-const DEFAULT_PREFS: StudyPrefs = { shuffle: false, skipKnown: true };
+const DEFAULT_PREFS: StudyPrefs = {
+  shuffle: false,
+  skipKnown: true,
+  multipleChoice: true,
+};
 
 export const useStudyPrefs = () => {
   const [prefs, setPrefs] = useState<StudyPrefs>(DEFAULT_PREFS);
