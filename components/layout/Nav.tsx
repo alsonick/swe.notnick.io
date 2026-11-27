@@ -19,7 +19,7 @@ export const Nav = () => {
   return (
     <nav
       aria-label="Main"
-      className="liquid-glass fixed top-8 z-50 flex h-14 w-[95%] sm:w-[40rem] items-center justify-between
+      className="liquid-glass fixed top-8 z-50 flex h-14 w-[95%] sm:w-[40rem] md:w-[48rem] items-center justify-between
       rounded-lg px-4 sm:px-6"
     >
       <div className="flex items-center gap-2 sm:gap-4">

@@ -1,6 +1,7 @@
 import {
   MAIN_CONTENT_ID,
   OG_IMAGE_URL,
+  REPO_URL,
   SITE_NAME,
   THEME_COLOR,
 } from "../../lib/constants";
@@ -15,6 +16,9 @@ import Head from "next/head";
 // an empty description.
 const TITLE = "Software Engineering Practice - Flashcards";
 const DESCRIPTION = "";
+
+const FOOTER_LINK = `font-bold rounded duration-300 hover:underline hover:text-black dark:hover:text-white
+  outline-none focus-visible:ring-4 ring-primary focus-visible:ring-offset-2 dark:ring-offset-black`;
 
 interface Props {
   children: React.ReactNode;
@@ -49,7 +53,7 @@ export const Layout = (props: Props) => {
       </Head>
       <div className="flex flex-col items-center">
         <Nav />
-        <div className="flex min-h-screen w-[95%] sm:w-[40rem] flex-col pt-32 pb-16">
+        <div className="flex min-h-screen w-[95%] sm:w-[40rem] md:w-[48rem] flex-col pt-32 pb-16">
           <main
             id={MAIN_CONTENT_ID}
             tabIndex={-1}
@@ -65,10 +69,21 @@ export const Layout = (props: Props) => {
                 href="https://notnick.io"
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold rounded duration-300 hover:underline hover:text-black dark:hover:text-white
-                outline-none focus-visible:ring-4 ring-primary focus-visible:ring-offset-2 dark:ring-offset-black"
+                className={FOOTER_LINK}
               >
                 notnick.io
+              </a>
+              .
+            </p>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Think a correct answer could be worded better?{" "}
+              <a
+                href={`${REPO_URL}/issues/new`}
+                target="_blank"
+                rel="noreferrer"
+                className={FOOTER_LINK}
+              >
+                Open an issue on GitHub
               </a>
               .
             </p>
